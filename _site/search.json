@@ -1,0 +1,135 @@
+[
+  {
+    "objectID": "Shiny-live.html",
+    "href": "Shiny-live.html",
+    "title": "Essay on Shiny Live",
+    "section": "",
+    "text": "Note\n\n\n\nAudience: These notes build on the Shiny Apps lecture. They explain Shinylive — a technology that runs Shiny apps entirely in the user’s browser, with no R server required. We compare it to traditional Shiny and explore when to use each approach."
+  },
+  {
+    "objectID": "Shiny-live.html#what-is-shinylive",
+    "href": "Shiny-live.html#what-is-shinylive",
+    "title": "Essay on Shiny Live",
+    "section": "1. What Is Shinylive?",
+    "text": "1. What Is Shinylive?\n\nPrompt\nWhat is Shinylive? How is it different from a traditional Shiny app?\n\n\nResponse\nShinylive is a technology that allows Shiny apps to run entirely in the web browser — with no R or Python server required on the backend.\nIn a traditional Shiny app, when a user interacts with a slider or dropdown, their action is sent over the internet to an R process running on a server. The server recomputes and sends results back to the browser. The server is always in the loop.\nShinylive changes this completely. Using WebAssembly (Wasm), it compiles R (via webR) so that it runs inside the browser itself. There is no server. The entire R runtime — your app code, data, packages — lives in the user’s browser tab.\n\n\n\n\n\n\n\n\n\nTraditional Shiny\nShinylive\n\n\n\n\nArchitecture\nBrowser → Internet → R Server → Browser\nBrowser only — R runs via WebAssembly\n\n\nServer needed?\nYes\nNo"
+  },
+  {
+    "objectID": "Shiny-live.html#how-shinylive-works-under-the-hood",
+    "href": "Shiny-live.html#how-shinylive-works-under-the-hood",
+    "title": "Essay on Shiny Live",
+    "section": "2. How Shinylive Works — Under the Hood",
+    "text": "2. How Shinylive Works — Under the Hood\n\nPrompt\nWalk me through what happens technically when a user opens a Shinylive app.\n\n\nResponse\nHere is the sequence of events when a user navigates to a Shinylive-powered page:\n\nThe browser downloads the page — a static HTML/JS/CSS bundle (no server required).\nWebR loads — the browser downloads the webR runtime (~30–60 MB on first load). This is the compiled R interpreter in WebAssembly format. It is cached for future visits.\nPackages are fetched — any R packages your app uses are downloaded from a WebAssembly package repository and loaded into the browser’s virtual filesystem.\nYour Shiny app code executes — the R interpreter inside the browser runs your app.R (or ui.R/server.R).\nReactivity works normally — all of Shiny’s reactive magic runs in-browser. No network round-trips for reactivity. The user’s interactions are instantaneous.\n\nThis means the app can work offline once it has been loaded, and it can be hosted on any static file server — GitHub Pages, Netlify, Quarto Pub, Amazon S3, etc."
+  },
+  {
+    "objectID": "Shiny-live.html#getting-started-with-shinylive",
+    "href": "Shiny-live.html#getting-started-with-shinylive",
+    "title": "Essay on Shiny Live",
+    "section": "3. Getting Started with Shinylive",
+    "text": "3. Getting Started with Shinylive\n\nPrompt\nHow do I actually use Shinylive? Show me the steps.\n\n\nResponse\nThe simplest way to embed a Shinylive app is inside a Quarto .qmd file. First, add the extension:\n# Run in terminal\nquarto add quarto-ext/shinylive\nThen add this to your _quarto.yml:\nfilters:\n  - shinylive\nThen embed an app using a shinylive-r code block:\n```{shinylive-r}\n#| standalone: true\n#| viewerHeight: 400\n\nlibrary(shiny)\n\nui &lt;- fluidPage(\n  titlePanel(\"Hello Shinylive!\"),\n  sliderInput(\"n\", \"Sample size:\", 10, 500, 100),\n  plotOutput(\"hist\")\n)\n\nserver &lt;- function(input, output) {\n  output$hist &lt;- renderPlot({\n    hist(rnorm(input$n), col = \"steelblue\", main = \"Normal Distribution\")\n  })\n}\n\nshinyApp(ui, server)\n```"
+  },
+  {
+    "objectID": "Shiny-live.html#shinylive-vs.-traditional-shiny-a-detailed-comparison",
+    "href": "Shiny-live.html#shinylive-vs.-traditional-shiny-a-detailed-comparison",
+    "title": "Essay on Shiny Live",
+    "section": "4. Shinylive vs. Traditional Shiny: A Detailed Comparison",
+    "text": "4. Shinylive vs. Traditional Shiny: A Detailed Comparison\n\nPrompt\nWhat are the specific differences between Shinylive and traditional Shiny?\n\n\nResponse\nThe table below compares the two approaches across key dimensions:\n\n\n\n\n\n\n\n\nDimension\nTraditional Shiny\nShinylive\n\n\n\n\nServer needed?\nYes — R must run on a server\nNo — R runs in the browser\n\n\nHosting cost\nPotentially significant (shinyapps.io, Posit Connect)\nFree — any static host works\n\n\nScalability\nLimited by server resources\nInfinitely scalable\n\n\nInitial load time\nFast (server already running)\nSlower first load (~30–60 s)\n\n\nReactivity speed\nNetwork round-trip delay\nInstant after load\n\n\nPackage support\nAny CRAN or GitHub package\nOnly Wasm-compiled packages\n\n\nData privacy\nData processed on server\nData never leaves the browser\n\n\nFile system access\nFull server file system\nVirtual in-browser only\n\n\nDatabase connections\nFull support\nNot supported\n\n\nOffline use\nRequires active internet\nWorks offline after first load"
+  },
+  {
+    "objectID": "Shiny-live.html#pros-and-cons-of-shinylive",
+    "href": "Shiny-live.html#pros-and-cons-of-shinylive",
+    "title": "Essay on Shiny Live",
+    "section": "5. Pros and Cons of Shinylive",
+    "text": "5. Pros and Cons of Shinylive\n\nPrompt\nSummarize the advantages and disadvantages of Shinylive compared to traditional Shiny.\n\n\nResponse\n\n\nAdvantages of Shinylive\n\nZero server cost. Deploy to GitHub Pages or Netlify for free. No monthly fees for shinyapps.io or Posit Connect.\nUnlimited scalability. Because R runs in each user’s browser, there is no central server to overwhelm. A thousand concurrent users is the same as one.\nNo server maintenance. No need to manage R versions, package updates, or server uptime. Your static files just sit there.\nPrivacy by design. Sensitive data (e.g., uploaded CSV files) is processed entirely in the user’s browser and never transmitted to a server.\nWorks offline. Once loaded, the app continues to function without internet access — useful in field settings or areas with poor connectivity.\nPerfect for education. Embed live, editable Shiny apps directly into Quarto documents, textbooks, or course websites. Students can interact without installing R.\n\n\n\nDisadvantages of Shinylive\n\nSlow initial load. The WebAssembly R runtime is large (~30–60 MB). First-time users may wait 30 seconds or more.\nLimited package ecosystem. Not all CRAN packages have been compiled to WebAssembly. Packages with compiled C/C++ dependencies may not be available.\nNo server-side operations. You cannot connect to a database, call a private API, send emails, or write files to a server.\nConstrained compute. The browser’s JavaScript engine and WebAssembly runtime are slower than a native R process. Complex models or large datasets may be sluggish.\nBrowser memory limits. Large datasets must fit in the user’s browser memory, not server RAM.\nDebugging is harder. Error messages appear in the browser console, not the familiar RStudio console."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Home Page",
+    "section": "",
+    "text": "I am an undergraduate student with a growing passion for marketing. This portfolio showcases the skills and projects I have developed through coursework, with a focus on R, Quarto, and Shiny."
+  },
+  {
+    "objectID": "index.html#about-me",
+    "href": "index.html#about-me",
+    "title": "Home Page",
+    "section": "",
+    "text": "I am an undergraduate student with a growing passion for marketing. This portfolio showcases the skills and projects I have developed through coursework, with a focus on R, Quarto, and Shiny."
+  },
+  {
+    "objectID": "index.html#skills",
+    "href": "index.html#skills",
+    "title": "Home Page",
+    "section": "🛠️ Skills",
+    "text": "🛠️ Skills\n\nR / RStudio\nQuarto\nShiny\nShinylive\nggplot2\nTidyverse\nR Markdown\nQuarto Dashboards\nData Visualization\nMarketing Analytics"
+  },
+  {
+    "objectID": "index.html#education",
+    "href": "index.html#education",
+    "title": "Home Page",
+    "section": "🎓 Education",
+    "text": "🎓 Education\nBachelor of Science — Marketing Management\nCal Poly Pomona\nExpected Graduation: 2027\nRelevant Coursework\nMarketing Research · Data Visualization · Business Analytics"
+  },
+  {
+    "objectID": "Dashboard.html",
+    "href": "Dashboard.html",
+    "title": "Data Dashboard",
+    "section": "",
+    "text": "list(icon = \"car-front\", color = \"primary\", value = nrow(mtcars))\n\n$icon\n[1] \"car-front\"\n\n$color\n[1] \"primary\"\n\n$value\n[1] 32\n\n\n\nlist(icon = \"speedometer\", color = \"success\", value = round(mean(mtcars$mpg), 1))\n\n$icon\n[1] \"speedometer\"\n\n$color\n[1] \"success\"\n\n$value\n[1] 20.1\n\n\n\nlist(icon = \"lightning\", color = \"warning\", value = round(mean(mtcars$hp), 1))\n\n$icon\n[1] \"lightning\"\n\n$color\n[1] \"warning\"\n\n$value\n[1] 146.7\n\n\n\nlist(icon = \"boxes\", color = \"danger\", value = round(mean(mtcars$wt), 2))\n\n$icon\n[1] \"boxes\"\n\n$color\n[1] \"danger\"\n\n$value\n[1] 3.22\n\n\n\n\n\n\nggplot(mtcars, aes(x = hp, y = mpg, color = cyl, size = wt)) +\n  geom_point(alpha = 0.75) +\n  geom_smooth(aes(group = 1), method = \"lm\", se = TRUE,\n              color = \"#2563eb\", linetype = \"dashed\", linewidth = 0.8) +\n  scale_color_manual(values = c(\"4\" = \"#16a34a\", \"6\" = \"#ea580c\", \"8\" = \"#7c3aed\"),\n                     name = \"Cylinders\") +\n  scale_size_continuous(name = \"Weight (tons)\", range = c(2, 7)) +\n  labs(x = \"Horsepower (hp)\", y = \"Miles Per Gallon (mpg)\",\n       caption = \"Bubble size proportional to vehicle weight\") +\n  theme_minimal(base_size = 13)\n\nWarning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` instead.\n\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\nWarning: The following aesthetics were dropped during statistical transformation: size.\nℹ This can happen when ggplot fails to infer the correct grouping structure in\n  the data.\nℹ Did you forget to specify a `group` aesthetic or to convert a numerical\n  variable into a factor?\n\n\n\n\n\n\n\n\n\n\nggplot(mtcars, aes(x = cyl, y = mpg, fill = cyl)) +\n  geom_boxplot(alpha = 0.7, outlier.shape = 21, outlier.size = 3) +\n  geom_jitter(width = 0.15, alpha = 0.5, size = 2) +\n  scale_fill_manual(values = c(\"4\" = \"#bbf7d0\", \"6\" = \"#fed7aa\", \"8\" = \"#ddd6fe\")) +\n  labs(x = \"Number of Cylinders\", y = \"Miles Per Gallon (mpg)\") +\n  theme_minimal(base_size = 13) +\n  theme(legend.position = \"none\")"
+  },
+  {
+    "objectID": "Dashboard.html#row",
+    "href": "Dashboard.html#row",
+    "title": "Data Dashboard",
+    "section": "",
+    "text": "list(icon = \"car-front\", color = \"primary\", value = nrow(mtcars))\n\n$icon\n[1] \"car-front\"\n\n$color\n[1] \"primary\"\n\n$value\n[1] 32\n\n\n\nlist(icon = \"speedometer\", color = \"success\", value = round(mean(mtcars$mpg), 1))\n\n$icon\n[1] \"speedometer\"\n\n$color\n[1] \"success\"\n\n$value\n[1] 20.1\n\n\n\nlist(icon = \"lightning\", color = \"warning\", value = round(mean(mtcars$hp), 1))\n\n$icon\n[1] \"lightning\"\n\n$color\n[1] \"warning\"\n\n$value\n[1] 146.7\n\n\n\nlist(icon = \"boxes\", color = \"danger\", value = round(mean(mtcars$wt), 2))\n\n$icon\n[1] \"boxes\"\n\n$color\n[1] \"danger\"\n\n$value\n[1] 3.22"
+  },
+  {
+    "objectID": "Dashboard.html#row-1",
+    "href": "Dashboard.html#row-1",
+    "title": "Data Dashboard",
+    "section": "",
+    "text": "ggplot(mtcars, aes(x = hp, y = mpg, color = cyl, size = wt)) +\n  geom_point(alpha = 0.75) +\n  geom_smooth(aes(group = 1), method = \"lm\", se = TRUE,\n              color = \"#2563eb\", linetype = \"dashed\", linewidth = 0.8) +\n  scale_color_manual(values = c(\"4\" = \"#16a34a\", \"6\" = \"#ea580c\", \"8\" = \"#7c3aed\"),\n                     name = \"Cylinders\") +\n  scale_size_continuous(name = \"Weight (tons)\", range = c(2, 7)) +\n  labs(x = \"Horsepower (hp)\", y = \"Miles Per Gallon (mpg)\",\n       caption = \"Bubble size proportional to vehicle weight\") +\n  theme_minimal(base_size = 13)\n\nWarning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` instead.\n\n\n`geom_smooth()` using formula = 'y ~ x'\n\n\nWarning: The following aesthetics were dropped during statistical transformation: size.\nℹ This can happen when ggplot fails to infer the correct grouping structure in\n  the data.\nℹ Did you forget to specify a `group` aesthetic or to convert a numerical\n  variable into a factor?\n\n\n\n\n\n\n\n\n\n\nggplot(mtcars, aes(x = cyl, y = mpg, fill = cyl)) +\n  geom_boxplot(alpha = 0.7, outlier.shape = 21, outlier.size = 3) +\n  geom_jitter(width = 0.15, alpha = 0.5, size = 2) +\n  scale_fill_manual(values = c(\"4\" = \"#bbf7d0\", \"6\" = \"#fed7aa\", \"8\" = \"#ddd6fe\")) +\n  labs(x = \"Number of Cylinders\", y = \"Miles Per Gallon (mpg)\") +\n  theme_minimal(base_size = 13) +\n  theme(legend.position = \"none\")"
+  },
+  {
+    "objectID": "Dashboard.html#row-2",
+    "href": "Dashboard.html#row-2",
+    "title": "Data Dashboard",
+    "section": "Row",
+    "text": "Row\n\nmtcars |&gt;\n  group_by(Cylinders = cyl) |&gt;\n  summarise(\n    N        = n(),\n    Avg_MPG  = round(mean(mpg), 1),\n    Avg_HP   = round(mean(hp), 1),\n    Avg_Wt   = round(mean(wt), 2),\n    Avg_Qsec = round(mean(qsec), 2),\n    .groups  = \"drop\"\n  ) |&gt;\n  knitr::kable(\n    col.names = c(\"Cylinders\", \"N\", \"Avg MPG\", \"Avg HP\",\n                  \"Avg Weight (tons)\", \"Avg 1/4 Mile (sec)\")\n  )\n\n\n\n\nCylinders\nN\nAvg MPG\nAvg HP\nAvg Weight (tons)\nAvg 1/4 Mile (sec)\n\n\n\n\n4\n11\n26.7\n82.6\n2.29\n19.14\n\n\n6\n7\n19.7\n122.3\n3.12\n17.98\n\n\n8\n14\n15.1\n209.2\n4.00\n16.77"
+  },
+  {
+    "objectID": "Dashboard.html#row-3",
+    "href": "Dashboard.html#row-3",
+    "title": "Data Dashboard",
+    "section": "Row",
+    "text": "Row\n\nggplot(mtcars, aes(x = cyl, y = hp, fill = cyl)) +\n  geom_violin(alpha = 0.6, trim = FALSE) +\n  geom_boxplot(width = 0.1, fill = \"white\", alpha = 0.8) +\n  scale_fill_manual(values = c(\"4\" = \"#16a34a\", \"6\" = \"#ea580c\", \"8\" = \"#7c3aed\")) +\n  labs(x = \"Number of Cylinders\", y = \"Horsepower (hp)\") +\n  theme_minimal(base_size = 13) +\n  theme(legend.position = \"none\")"
+  },
+  {
+    "objectID": "Shiny-apps.html",
+    "href": "Shiny-apps.html",
+    "title": "Essay on Shiny Apps",
+    "section": "",
+    "text": "Audience: These notes are written for colleagues who are comfortable with R but have not yet built interactive web applications. By the end of this lecture, you will understand what Shiny is, how it works, and how to build your first app — no web development experience needed."
+  },
+  {
+    "objectID": "Shiny-apps.html#what-is-shiny",
+    "href": "Shiny-apps.html#what-is-shiny",
+    "title": "Essay on Shiny Apps",
+    "section": "1. What Is Shiny?",
+    "text": "1. What Is Shiny?\n\nPrompt\nWhat is R Shiny, and why should a data scientist care about it?\n\n\nResponse\nShiny is an open-source R package developed by Posit (formerly RStudio) that allows you to build interactive web applications directly from R — with no HTML, CSS, or JavaScript required (though you can use them if you want to)."
+  },
+  {
+    "objectID": "Shiny-apps.html#a-complete-working-example",
+    "href": "Shiny-apps.html#a-complete-working-example",
+    "title": "Essay on Shiny Apps",
+    "section": "2. A Complete Working Example",
+    "text": "2. A Complete Working Example\n\nPrompt\nShow a complete, self-contained Shiny app that demonstrates key concepts.\n\n\nResponse\nThe following app allows users to explore the mtcars dataset interactively. It demonstrates inputs, reactive outputs, a plot, and a table — all in one cohesive example.\nlibrary(shiny)\nlibrary(ggplot2)\n\nui &lt;- fluidPage(\n  \n  theme = bslib::bs_theme(bootswatch = \"flatly\"),\n  \n  titlePanel(\"🚗 mtcars Explorer\"),\n  \n  sidebarLayout(\n    sidebarPanel(\n      selectInput(\"x_var\", \"X-axis variable:\",\n                  choices = c(\"Horsepower\" = \"hp\",\n                              \"Weight\"     = \"wt\",\n                              \"Displacement\" = \"disp\"),\n                  selected = \"hp\"),\n      \n      selectInput(\"color_var\", \"Color by:\",\n                  choices = c(\"Cylinders\" = \"cyl\",\n                              \"Transmission\" = \"am\"),\n                  selected = \"cyl\"),\n      \n      sliderInput(\"alpha\", \"Point transparency:\",\n                  min = 0.1, max = 1, value = 0.7, step = 0.1),\n      \n      hr(),\n      p(\"Data: Motor Trend Car Road Tests, 1974.\")\n    ),\n    \n    mainPanel(\n      tabsetPanel(\n        tabPanel(\"Plot\", plotOutput(\"scatter\", height = \"400px\")),\n        tabPanel(\"Table\", DT::dataTableOutput(\"table\"))\n      )\n    )\n  )\n)\n\nserver &lt;- function(input, output) {\n  \n  # Reactive dataset (shared between plot and table)\n  car_data &lt;- reactive({\n    mtcars |&gt;\n      mutate(cyl = factor(cyl), am = factor(am, labels = c(\"Auto\",\"Manual\")))\n  })\n  \n  # Scatter plot\n  output$scatter &lt;- renderPlot({\n    ggplot(car_data(), aes_string(x = input$x_var, y = \"mpg\",\n                                   color = input$color_var)) +\n      geom_point(size = 3, alpha = input$alpha) +\n      geom_smooth(method = \"lm\", se = FALSE) +\n      labs(title = paste(\"MPG vs.\", input$x_var),\n           y = \"Miles Per Gallon\") +\n      theme_minimal(base_size = 14)\n  })\n  \n  # Data table\n  output$table &lt;- DT::renderDataTable({\n    car_data()\n  }, options = list(pageLength = 10))\n}\n\nshinyApp(ui, server)"
+  },
+  {
+    "objectID": "Shiny-apps.html#deploying-a-shiny-app",
+    "href": "Shiny-apps.html#deploying-a-shiny-app",
+    "title": "Essay on Shiny Apps",
+    "section": "3. Deploying a Shiny App",
+    "text": "3. Deploying a Shiny App\n\nPrompt\nHow do you share a Shiny app with others who don’t have R installed?\n\n\nResponse\nSince Shiny apps require an R server to process the reactive logic, deployment means running that server somewhere accessible.\n\n\nDeployment Options\n\n\n\n\n\n\n\n\nOption\nBest For\nCost\n\n\n\n\nshinyapps.io\nQuick sharing, small apps\nFree tier available\n\n\nPosit Connect\nEnterprise, teams\nPaid\n\n\nShiny Server\nSelf-hosted on Linux\nFree (open source)\n\n\nHeroku / Docker\nCustom infrastructure\nVaries\n\n\nShinylive\nServerless, no R backend needed\nFree (see next essay)\n\n\n\nDeploying to shinyapps.io is the simplest path:\n# Install the rsconnect package\ninstall.packages(\"rsconnect\")\n\n# Configure your account (one-time setup)\nrsconnect::setAccountInfo(\n  name   = \"your-username\",\n  token  = \"YOUR_TOKEN\",\n  secret = \"YOUR_SECRET\"\n)\n\n# Deploy\nrsconnect::deployApp(\"path/to/your/app/\")"
+  }
+]

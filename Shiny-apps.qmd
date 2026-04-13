@@ -1,0 +1,147 @@
+---
+title: "Essay on Shiny Apps"
+date: today
+author: "Kelly Liang"
+---
+
+
+::: {.essay-lead}
+**Audience:** These notes are written for colleagues who are comfortable with R but have not 
+yet built interactive web applications. By the end of this lecture, you will understand what 
+Shiny is, how it works, and how to build your first app — no web development experience needed.
+:::
+
+---
+
+## 1. What Is Shiny? {.section-title}
+
+### Prompt
+*What is R Shiny, and why should a data scientist care about it?*
+
+### Response
+
+**Shiny** is an open-source R package developed by Posit (formerly RStudio) that allows you 
+to build interactive web applications directly from R — **with no HTML, CSS, or JavaScript 
+required** (though you can use them if you want to).
+
+---
+
+## 2. A Complete Working Example {.section-title}
+
+### Prompt
+*Show a complete, self-contained Shiny app that demonstrates key concepts.*
+
+### Response
+
+The following app allows users to explore the `mtcars` dataset interactively. It demonstrates 
+inputs, reactive outputs, a plot, and a table — all in one cohesive example.
+
+```r
+library(shiny)
+library(ggplot2)
+
+ui <- fluidPage(
+  
+  theme = bslib::bs_theme(bootswatch = "flatly"),
+  
+  titlePanel("🚗 mtcars Explorer"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("x_var", "X-axis variable:",
+                  choices = c("Horsepower" = "hp",
+                              "Weight"     = "wt",
+                              "Displacement" = "disp"),
+                  selected = "hp"),
+      
+      selectInput("color_var", "Color by:",
+                  choices = c("Cylinders" = "cyl",
+                              "Transmission" = "am"),
+                  selected = "cyl"),
+      
+      sliderInput("alpha", "Point transparency:",
+                  min = 0.1, max = 1, value = 0.7, step = 0.1),
+      
+      hr(),
+      p("Data: Motor Trend Car Road Tests, 1974.")
+    ),
+    
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Plot", plotOutput("scatter", height = "400px")),
+        tabPanel("Table", DT::dataTableOutput("table"))
+      )
+    )
+  )
+)
+
+server <- function(input, output) {
+  
+  # Reactive dataset (shared between plot and table)
+  car_data <- reactive({
+    mtcars |>
+      mutate(cyl = factor(cyl), am = factor(am, labels = c("Auto","Manual")))
+  })
+  
+  # Scatter plot
+  output$scatter <- renderPlot({
+    ggplot(car_data(), aes_string(x = input$x_var, y = "mpg",
+                                   color = input$color_var)) +
+      geom_point(size = 3, alpha = input$alpha) +
+      geom_smooth(method = "lm", se = FALSE) +
+      labs(title = paste("MPG vs.", input$x_var),
+           y = "Miles Per Gallon") +
+      theme_minimal(base_size = 14)
+  })
+  
+  # Data table
+  output$table <- DT::renderDataTable({
+    car_data()
+  }, options = list(pageLength = 10))
+}
+
+shinyApp(ui, server)
+```
+
+---
+
+## 3. Deploying a Shiny App {.section-title}
+
+### Prompt
+*How do you share a Shiny app with others who don't have R installed?*
+
+### Response
+
+Since Shiny apps require an **R server** to process the reactive logic, deployment means 
+running that server somewhere accessible.
+
+### Deployment Options
+
+| Option | Best For | Cost |
+|---|---|---|
+| **shinyapps.io** | Quick sharing, small apps | Free tier available |
+| **Posit Connect** | Enterprise, teams | Paid |
+| **Shiny Server** | Self-hosted on Linux | Free (open source) |
+| **Heroku / Docker** | Custom infrastructure | Varies |
+| **Shinylive** | Serverless, no R backend needed | Free (see next essay) |
+
+: {.striped .hover}
+
+Deploying to **shinyapps.io** is the simplest path:
+
+```r
+# Install the rsconnect package
+install.packages("rsconnect")
+
+# Configure your account (one-time setup)
+rsconnect::setAccountInfo(
+  name   = "your-username",
+  token  = "YOUR_TOKEN",
+  secret = "YOUR_SECRET"
+)
+
+# Deploy
+rsconnect::deployApp("path/to/your/app/")
+```
+
+---

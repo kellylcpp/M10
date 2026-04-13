@@ -1,0 +1,106 @@
+---
+title: "Data Dashboard"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+library(dplyr)
+
+data(mtcars)
+mtcars$car_name <- rownames(mtcars)
+mtcars$cyl <- factor(mtcars$cyl)
+```
+
+# Summary
+
+## Row {height=25%}
+
+```{r}
+#| content: valuebox
+#| title: "Total Cars"
+list(icon = "car-front", color = "primary", value = nrow(mtcars))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Avg MPG"
+list(icon = "speedometer", color = "success", value = round(mean(mtcars$mpg), 1))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Avg Horsepower"
+list(icon = "lightning", color = "warning", value = round(mean(mtcars$hp), 1))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Avg Weight (tons)"
+list(icon = "boxes", color = "danger", value = round(mean(mtcars$wt), 2))
+```
+
+## Row {height=75%}
+
+```{r}
+#| title: "MPG vs Horsepower by Cylinder Count"
+ggplot(mtcars, aes(x = hp, y = mpg, color = cyl, size = wt)) +
+  geom_point(alpha = 0.75) +
+  geom_smooth(aes(group = 1), method = "lm", se = TRUE,
+              color = "#2563eb", linetype = "dashed", linewidth = 0.8) +
+  scale_color_manual(values = c("4" = "#16a34a", "6" = "#ea580c", "8" = "#7c3aed"),
+                     name = "Cylinders") +
+  scale_size_continuous(name = "Weight (tons)", range = c(2, 7)) +
+  labs(x = "Horsepower (hp)", y = "Miles Per Gallon (mpg)",
+       caption = "Bubble size proportional to vehicle weight") +
+  theme_minimal(base_size = 13)
+```
+
+```{r}
+#| title: "MPG Distribution by Cylinders"
+ggplot(mtcars, aes(x = cyl, y = mpg, fill = cyl)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = 21, outlier.size = 3) +
+  geom_jitter(width = 0.15, alpha = 0.5, size = 2) +
+  scale_fill_manual(values = c("4" = "#bbf7d0", "6" = "#fed7aa", "8" = "#ddd6fe")) +
+  labs(x = "Number of Cylinders", y = "Miles Per Gallon (mpg)") +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
+```
+
+# Data Table
+
+## Row
+
+```{r}
+#| title: "Summary Statistics by Cylinder Group"
+mtcars |>
+  group_by(Cylinders = cyl) |>
+  summarise(
+    N        = n(),
+    Avg_MPG  = round(mean(mpg), 1),
+    Avg_HP   = round(mean(hp), 1),
+    Avg_Wt   = round(mean(wt), 2),
+    Avg_Qsec = round(mean(qsec), 2),
+    .groups  = "drop"
+  ) |>
+  knitr::kable(
+    col.names = c("Cylinders", "N", "Avg MPG", "Avg HP",
+                  "Avg Weight (tons)", "Avg 1/4 Mile (sec)")
+  )
+```
+
+## Row
+
+```{r}
+#| title: "Horsepower Distribution by Cylinders"
+ggplot(mtcars, aes(x = cyl, y = hp, fill = cyl)) +
+  geom_violin(alpha = 0.6, trim = FALSE) +
+  geom_boxplot(width = 0.1, fill = "white", alpha = 0.8) +
+  scale_fill_manual(values = c("4" = "#16a34a", "6" = "#ea580c", "8" = "#7c3aed")) +
+  labs(x = "Number of Cylinders", y = "Horsepower (hp)") +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
+```

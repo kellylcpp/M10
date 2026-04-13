@@ -1,0 +1,35 @@
+---
+title: "Home Page"
+date: today
+author: "Kelly Liang"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+---
+
+## About Me 
+
+I am an undergraduate student with a growing passion for marketing. This portfolio showcases the skills and projects I have developed through coursework, with a focus on R, Quarto, and Shiny.
+
+## 🛠️ Skills
+
+-   R / RStudio
+-   Quarto
+-   Shiny
+-   Shinylive
+-   ggplot2
+-   Tidyverse
+-   R Markdown
+-   Quarto Dashboards
+-   Data Visualization
+-   Marketing Analytics
+
+## 🎓 Education
+
+**Bachelor of Science — Marketing Management**\
+Cal Poly Pomona\
+Expected Graduation: 2027
+
+**Relevant Coursework**\
+Marketing Research · Data Visualization · Business Analytics

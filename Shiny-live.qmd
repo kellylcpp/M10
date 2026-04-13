@@ -1,0 +1,162 @@
+---
+title: "Essay on Shiny Live"
+date: today
+author: "Kelly Liang"
+---
+::: {.callout-note}
+**Audience:** These notes build on the Shiny Apps lecture. They explain Shinylive — a technology that runs Shiny apps entirely in the user's browser, with no R server required. We compare it to traditional Shiny and explore when to use each approach.
+:::
+
+---
+
+## 1. What Is Shinylive?
+
+### Prompt
+*What is Shinylive? How is it different from a traditional Shiny app?*
+
+### Response
+
+**Shinylive** is a technology that allows Shiny apps to run **entirely in the web browser** — with no R or Python server required on the backend.
+
+In a traditional Shiny app, when a user interacts with a slider or dropdown, their action is sent over the internet to an R process running on a server. The server recomputes and sends results back to the browser. **The server is always in the loop.**
+
+Shinylive changes this completely. Using **WebAssembly (Wasm)**, it compiles R (via [webR](https://docs.r-wasm.org/webr/latest/)) so that it runs inside the browser itself. There is no server. The entire R runtime — your app code, data, packages — lives in the user's browser tab.
+
+| | Traditional Shiny | Shinylive |
+|---|---|---|
+| **Architecture** | Browser → Internet → R Server → Browser | Browser only — R runs via WebAssembly |
+| **Server needed?** | Yes | No |
+
+: {.striped}
+
+---
+
+## 2. How Shinylive Works — Under the Hood
+
+### Prompt
+*Walk me through what happens technically when a user opens a Shinylive app.*
+
+### Response
+
+Here is the sequence of events when a user navigates to a Shinylive-powered page:
+
+1. **The browser downloads the page** — a static HTML/JS/CSS bundle (no server required).
+2. **WebR loads** — the browser downloads the webR runtime (~30–60 MB on first load). This is the compiled R interpreter in WebAssembly format. It is cached for future visits.
+3. **Packages are fetched** — any R packages your app uses are downloaded from a WebAssembly package repository and loaded into the browser's virtual filesystem.
+4. **Your Shiny app code executes** — the R interpreter inside the browser runs your `app.R` (or `ui.R`/`server.R`).
+5. **Reactivity works normally** — all of Shiny's reactive magic runs in-browser. No network round-trips for reactivity. The user's interactions are instantaneous.
+
+This means the app can work **offline** once it has been loaded, and it can be hosted on **any static file server** — GitHub Pages, Netlify, Quarto Pub, Amazon S3, etc.
+
+---
+
+## 3. Getting Started with Shinylive
+
+### Prompt
+*How do I actually use Shinylive? Show me the steps.*
+
+### Response
+
+The simplest way to embed a Shinylive app is inside a Quarto `.qmd` file. First, add the extension:
+
+```r
+# Run in terminal
+quarto add quarto-ext/shinylive
+```
+
+Then add this to your `_quarto.yml`:
+
+```yaml
+filters:
+  - shinylive
+```
+
+Then embed an app using a `shinylive-r` code block:
+
+````markdown
+```{{shinylive-r}}
+#| standalone: true
+#| viewerHeight: 400
+
+library(shiny)
+
+ui <- fluidPage(
+  titlePanel("Hello Shinylive!"),
+  sliderInput("n", "Sample size:", 10, 500, 100),
+  plotOutput("hist")
+)
+
+server <- function(input, output) {
+  output$hist <- renderPlot({
+    hist(rnorm(input$n), col = "steelblue", main = "Normal Distribution")
+  })
+}
+
+shinyApp(ui, server)
+```
+````
+
+---
+
+## 4. Shinylive vs. Traditional Shiny: A Detailed Comparison
+
+### Prompt
+*What are the specific differences between Shinylive and traditional Shiny?*
+
+### Response
+
+The table below compares the two approaches across key dimensions:
+
+| Dimension | Traditional Shiny | Shinylive |
+|---|---|---|
+| **Server needed?** | Yes — R must run on a server | No — R runs in the browser |
+| **Hosting cost** | Potentially significant (shinyapps.io, Posit Connect) | Free — any static host works |
+| **Scalability** | Limited by server resources | Infinitely scalable |
+| **Initial load time** | Fast (server already running) | Slower first load (~30–60 s) |
+| **Reactivity speed** | Network round-trip delay | Instant after load |
+| **Package support** | Any CRAN or GitHub package | Only Wasm-compiled packages |
+| **Data privacy** | Data processed on server | Data never leaves the browser |
+| **File system access** | Full server file system | Virtual in-browser only |
+| **Database connections** | Full support | Not supported |
+| **Offline use** | Requires active internet | Works offline after first load |
+
+: {.striped .hover}
+
+---
+
+## 5. Pros and Cons of Shinylive
+
+### Prompt
+*Summarize the advantages and disadvantages of Shinylive compared to traditional Shiny.*
+
+### Response
+
+### Advantages of Shinylive
+
+1. **Zero server cost.** Deploy to GitHub Pages or Netlify for free. No monthly fees for shinyapps.io or Posit Connect.
+
+2. **Unlimited scalability.** Because R runs in each user's browser, there is no central server to overwhelm. A thousand concurrent users is the same as one.
+
+3. **No server maintenance.** No need to manage R versions, package updates, or server uptime. Your static files just sit there.
+
+4. **Privacy by design.** Sensitive data (e.g., uploaded CSV files) is processed entirely in the user's browser and never transmitted to a server.
+
+5. **Works offline.** Once loaded, the app continues to function without internet access — useful in field settings or areas with poor connectivity.
+
+6. **Perfect for education.** Embed live, editable Shiny apps directly into Quarto documents, textbooks, or course websites. Students can interact without installing R.
+
+### Disadvantages of Shinylive
+
+1. **Slow initial load.** The WebAssembly R runtime is large (~30–60 MB). First-time users may wait 30 seconds or more.
+
+2. **Limited package ecosystem.** Not all CRAN packages have been compiled to WebAssembly. Packages with compiled C/C++ dependencies may not be available.
+
+3. **No server-side operations.** You cannot connect to a database, call a private API, send emails, or write files to a server.
+
+4. **Constrained compute.** The browser's JavaScript engine and WebAssembly runtime are slower than a native R process. Complex models or large datasets may be sluggish.
+
+5. **Browser memory limits.** Large datasets must fit in the user's browser memory, not server RAM.
+
+6. **Debugging is harder.** Error messages appear in the browser console, not the familiar RStudio console.
+
+---
