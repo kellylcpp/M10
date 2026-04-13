@@ -1,0 +1,21 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Kelly Liang Portfolio"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: Dashboard.qmd
+        text: Dashboard
+      - href: Shiny-apps.qmd
+        text: Essay on Shiny Apps
+      - href: Shiny-live.qmd
+        text: Essay on Shinylive
+
+format:
+  html:
+    theme: cosmo
+    toc: true
